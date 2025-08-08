@@ -111,5 +111,47 @@
             <p>"Desvendando o passado para construir o futuro - uma satoshi de cada vez."</p>
         </div>
     </div>
+    <script>
+        (function () {
+            try {
+                var params = new URLSearchParams(window.location.search);
+                var isDebug = params.get('debug') === '1' || params.get('debug') === 'true';
+                if (!isDebug) return;
+
+                var style = document.createElement('style');
+                style.innerHTML = "\n                  * { outline: 1px solid rgba(0,0,0,0.06); }\n                  .__debug-panel { position: fixed; bottom: 12px; right: 12px; background: rgba(0,0,0,0.85); color:#fff; padding: 10px 12px; border-radius: 8px; font: 12px/1.4 monospace; z-index: 9999; max-width: 60vw; box-shadow: 0 6px 20px rgba(0,0,0,0.35);}\n                  .__debug-panel b { color: #7fd2ff; }\n                  .__debug-grid { position: fixed; top:0; left:0; width:100%; height:100%; pointer-events:none; background-image: linear-gradient(rgba(0,0,0,0.07) 1px, transparent 1px), linear-gradient(90deg, rgba(0,0,0,0.07) 1px, transparent 1px); background-size: 8px 8px, 8px 8px; z-index:9998; }\n                 ";
+                document.head.appendChild(style);
+
+                var grid = document.createElement('div');
+                grid.className = '__debug-grid';
+                document.body.appendChild(grid);
+
+                var panel = document.createElement('div');
+                panel.className = '__debug-panel';
+                function getTimings() {
+                    var dcl = 0, load = 0;
+                    var navEntries = (performance.getEntriesByType && performance.getEntriesByType('navigation')) || [];
+                    if (navEntries && navEntries.length) {
+                        dcl = Math.round(navEntries[0].domContentLoadedEventEnd);
+                        load = Math.round(navEntries[0].loadEventEnd);
+                    } else if (performance.timing) {
+                        dcl = Math.round(performance.timing.domContentLoadedEventEnd - performance.timing.navigationStart);
+                        load = Math.round(performance.timing.loadEventEnd - performance.timing.navigationStart);
+                    }
+                    return { dcl: dcl, load: load };
+                }
+                function render() {
+                    var t = getTimings();
+                    panel.innerHTML = '\n                        <div><b>Viewport:</b> ' + Math.round(window.innerWidth) + 'x' + Math.round(window.innerHeight) + ' @' + window.devicePixelRatio + 'x</div>\n                        <div><b>User Agent:</b> ' + navigator.userAgent + '</div>\n                        <div><b>Timing:</b> domContentLoaded=' + t.dcl + 'ms, load=' + t.load + 'ms</div>\n                        <div><b>Now:</b> ' + new Date().toLocaleString() + '</div>\n                        <div><b>Query:</b> ' + (location.search || '(none)') + '</div>\n                     ';
+                }
+                render();
+                window.addEventListener('resize', render);
+                document.body.appendChild(panel);
+                console.info('[DEBUG] Debug mode ativo. Acrescente ?debug=0 para desativar.');
+            } catch (e) {
+                console.warn('[DEBUG] Falha ao inicializar modo debug:', e);
+            }
+        })();
+    </script>
 </body>
 </html>
